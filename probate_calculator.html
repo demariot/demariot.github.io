@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Probate Counter</title>
+		<script type="text/javascript">
+			const tiers = [ {"pct":"4", "amount":100000}, 
+						    {"pct":"3", "amount":100000}, 
+						    {"pct":"2", "amount":800000}, 
+						    {"pct":"1", "amount":9000000}, 
+						    {"pct":".5", "amount":15000000}
+				   ];
+			let propAmount
+			let validationSpan
+			const amtEmptyMsg = "This field is required."
+			const gt25M = "Please enter a value less than or equal to 25,000,000"
+			const lt150K = "Please enter a value greater than or equal to 150,000"
+			const invalidCurrency = "Please enter a valid currency value"
+			
+
+			document.addEventListener('DOMContentLoaded', () => {
+				propAmount = document.querySelector('#propAmount')
+				validationSpan = document.querySelector('#validation')
+				calculateFees();
+
+				document.querySelector('#propAmount').onkeyup = () => {
+					calculateFees();
+				}
+			});
+
+			function calculateFees(){
+				let probateFeeDeconstructedByTiers = []
+				let interfaceValues = []
+				let validateFunc = validateAmt(propAmount.value)
+
+				if(validateFunc.status){
+					probateFeeDeconstructedByTiers = breakDownNumberByTiers(validateFunc.propVal)
+					interfaceValues = calculatePercentages(probateFeeDeconstructedByTiers)
+
+					updateInterface(interfaceValues)
+					validationSpan.className = "valid"
+				} else {
+					validationSpan.innerHTML = validateFunc.msg
+					validationSpan.className = "error"
+				}
+				
+			}
+
+			function breakDownNumberByTiers(propVal){		
+				let probateFeeDeconstructedByTiers = []
+				let remainingAmt = propVal
+				let tierAmount
+				let leadDigit
+				let divisibleByTierAmt
+				
+
+				//Break Probate fee down according to tiers
+				for(i=0; i < tiers.length; i++) {
+					tierAmount = tiers[i].amount
+
+					//divide remaining number by current tier amount to see if quotient is greater than 0
+					divisibleByTierAmt = Math.floor(remainingAmt/parseInt(tierAmount)) > 0
+
+
+					//if whole part is greater than zero
+					if(divisibleByTierAmt){
+						//add the tier to the array
+						probateFeeDeconstructedByTiers.push({pct:tiers[i].pct, amount:tierAmount})
+
+						//deduct the amount from the remaining fee amount
+						remainingAmt = remainingAmt - parseInt(tierAmount)
+					} else{
+
+						//if anything remaining add the remainder to the array
+						if(remainingAmt%tierAmount > 0){
+							probateFeeDeconstructedByTiers.push({pct:tiers[i].pct, amount:remainingAmt})
+						}
+
+						//break out of loop
+						break;
+					}	
+				}
+
+				return probateFeeDeconstructedByTiers
+			}
+
+			function calculatePercentages(probateFeeDeconstructedByTiers) {
+				let feeTotal = 0
+				let feePercent
+				let interfaceValues = []
+
+				
+
+				feeTotal = probateFeeDeconstructedByTiers.reduce(function(total, currVal) {
+					feePercent = isNaN(parseInt(currVal.pct)) ? 
+														parseFloat(currVal.pct)/100 : 
+														parseInt(currVal.pct)/100
+					return total + currVal.amount*feePercent
+				}, 0);
+
+				return [...interfaceValues,
+							{fld:document.querySelector('#execComm'), val:feeTotal},
+							{fld:document.querySelector('#attFees'), val:feeTotal},
+							{fld:document.querySelector('#totalFees'), val:feeTotal+feeTotal}
+						]
+			}
+
+			function updateInterface(interfaceValues) {
+				interfaceValues.map(elem => {
+					elem.fld.value = elem.val
+				});
+			}
+			 
+
+			function validateAmt(propAmountVal){
+				let res = {"status": true, "msg":"No Validation Condition met"}
+				let validCurrencyRegEx = new RegExp(/^(0|[1-9]\d+|)?(?:.?\d*)?$/);
+				let propValIsANum = !isNaN(parseInt(propAmountVal)) || !isNaN(parseFloat(propAmountVal))
+				let propVal = propAmountVal.indexOf('.') > -1 && !isNaN(parseFloat(propAmountVal)) ? 
+														parseFloat(propAmountVal) : 
+														parseInt(propAmountVal)
+				
+				let propAmountIsEmpty = propVal.length == 0
+				let propAmountInvalidCurrencyVal = !validCurrencyRegEx.test(propAmountVal);
+				let propAmountGT25M = propVal  > 25000000
+				let propAmountLT150K = propVal < 150000
+				
+
+				if(propAmountIsEmpty){
+					res.status=false
+					res.msg = amtEmptyMsg
+					return res
+				}
+
+				if(propAmountInvalidCurrencyVal){
+					res.status=false
+					res.msg = invalidCurrency
+					return res
+				}
+
+				if(propAmountGT25M){
+					res.status=false
+					res.msg = gt25M
+					return res
+				}
+
+				if(propAmountLT150K){
+					res.status=false
+					res.msg = lt150K
+					return res
+				}
+
+				return {...res, "propVal":propVal}
+
+			}
+		</script>
+		<style>
+			.error {
+				color: red;
+				display: inline;
+			}
+
+			.valid {
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+		<div>
+			<label style="width: 300px;display: block;float: left;">Property Subject to Probate Administration</label>
+			<input id="propAmount" type="text" value="1000000" /><br />
+			<div class="valid" id="validation">Error for this value</div>
+		</div>
+		<div>
+			<label style="width: 300px;display: block;float: left;">Executor's Commission</label>
+			<input id="execComm" type="text" />
+		</div>
+
+		<div>
+			<label style="width: 300px;display: block;float: left;">Attorney Fees</label>
+			<input id="attFees" type="text" />
+		</div>
+
+		<div>
+			<label style="width: 300px;display: block;float: left;">Total Fees</label>
+			<input id="totalFees" type="text" />
+		</div>
+
+	</body>
+</html>
