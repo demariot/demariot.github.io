@@ -10,17 +10,26 @@
 						    {"pct":"1", "amount":9000000}, 
 						    {"pct":".5", "amount":15000000}
 				   ];
-			let propAmount
-			let validationSpan
 			const amtEmptyMsg = "This field is required."
 			const gt25M = "Please enter a value less than or equal to 25,000,000"
 			const lt150K = "Please enter a value greater than or equal to 150,000"
 			const invalidCurrency = "Please enter a valid currency value"
+
+			//get inputs
+			let propAmount
+			let validationSpan
+			let execCommission
+			let attFees
+			let totalFees
 			
 
 			document.addEventListener('DOMContentLoaded', () => {
 				propAmount = document.querySelector('#propAmount')
 				validationSpan = document.querySelector('#validation')
+				execCommission = document.querySelector('#execComm')
+			    attFees = document.querySelector('#attFees')
+			    totalFees = document.querySelector('#totalFees')
+
 				calculateFees();
 
 				document.querySelector('#propAmount').onkeyup = () => {
@@ -96,9 +105,9 @@
 				}, 0);
 
 				return [...interfaceValues,
-							{fld:document.querySelector('#execComm'), val:feeTotal},
-							{fld:document.querySelector('#attFees'), val:feeTotal},
-							{fld:document.querySelector('#totalFees'), val:feeTotal+feeTotal}
+							{fld:execCommission, val:feeTotal},
+							{fld:attFees, val:feeTotal},
+							{fld:totalFees, val:feeTotal+feeTotal}
 						]
 			}
 
