@@ -126,7 +126,7 @@
 														parseFloat(propAmountVal) : 
 														parseInt(propAmountVal)
 				
-				let propAmountIsEmpty = propVal.length == 0
+				let propAmountIsEmpty = propAmountVal.length == 0
 				let propAmountInvalidCurrencyVal = !validCurrencyRegEx.test(propAmountVal);
 				let propAmountGT25M = propVal  > 25000000
 				let propAmountLT150K = propVal < 150000
